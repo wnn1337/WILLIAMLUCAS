@@ -1,0 +1,58 @@
+%uppgift 3
+close all
+clc
+m1=470;
+m2=50;
+k1=5300;
+k2=136000;
+c1=310;
+c2=1200;
+v=65/3.6;
+H=0.2;
+L=1;
+MH = [0,0,1,0; 0,0,0,1; -k1/m1, k1/m1, -c1/m1, c1/m1; k1/m2, -(k1+k2)/m2, c1/m2, -(c1+c2)/m2];
+vt=[0;0;0;0];
+delta = 10^-4;
+ResultatFE =[];
+%Euler
+tslut =2;
+for t=[0:delta:tslut]
+    Diff = quartercar(m1,m2,k1,k2,c1,c2,v,H,L,t,vt);
+    vt = vt+delta*Diff;
+    ResultatFE = [ResultatFE,vt];
+    
+end
+tid = [0:delta:tslut];
+
+plot(tid,ResultatFE(2,1:end),'r')
+
+%plot(tid,ResultatFE(2,1:end))
+options = odeset('RelTol',10^-6,'Refine',4);
+vt = [0,0,0,0]';
+tel = [0 2]';
+[t,vt] = ode45(@(t,vt) quartercar(m1,m2,k1,k2,c1,c2,v,H,L,t,vt),tel,vt,options)
+hold on
+plot(t,vt(:,2))
+
+================================================================================
+
+%fuktion quartercar.m
+function Diff=quartercar(m1,m2,k1,k2,c1,c2,v,H,L,t,vt)
+MH = [0,0,1,0; 0,0,0,1; -k1/m1, k1/m1, -c1/m1, c1/m1; k1/m2, -(k1+k2)/m2, c1/m2, -(c1+c2)/m2];
+
+  if t<=L/v;
+      h = (H/2)*(1-cos((2*pi*v*t)/L));
+      dh = (H*pi*(v/L))*sin(2*pi*v*(t/L));
+      
+  else
+          h=0;
+          dh=0;
+  end
+  
+  %Diff = [v(3,end); v(4,end); (k1ref*(-v(1,end)+v(2,end))+c1*(-v(3,end)+v(4,end)))/m1; (k2ref*(h-v(2,end))+k1ref*v(1,end)+c1*(v(3,end)-v(4,end))-c2*(v(4,end)-hprim))/m2];
+  Diff = MH*vt+[0,0,0,(c2*dh+k2*h)/m2]';
+  
+ 
+end
+
+==========================================================================
